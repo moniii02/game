@@ -1,15 +1,14 @@
 import arcade
 import random
 
-screen_width = 800
+screen_width = 900
 screen_height = 450
 screen_title = "GAME"
 
 gravity = 3 #pulls player down
-jump_speed = 15
-player_speed = 5
+jump_speed = 40
+player_speed = 6
 ground_y = 100 #an imaginary line to stop the player from falling
-#OBSTACLE_SPEED = 5
 
 class GAME (arcade.Window):
     def __init__(self, width, height, title):
@@ -33,21 +32,22 @@ class GAME (arcade.Window):
     def setup(self):
 
         self.player = arcade.Sprite("./assets/player.png")
-        self.player.center_x = 150
+        self.player.center_x = 75
         self.player.center_y = ground_y
         
         self.player.change_x = 0
         self.player.change_y= 0
 
-        self.player.scale = 0.5
+        self.player.scale = 0.3
         self.lista_player.append(self.player)
 
     
     def setup_enemy(self):
-        self.enemy = arcade.Sprite("./assets/enemy.jpg")
-        self.enemy.scale = 0.25
-        self.enemy.center_x = screen_width - 165
+        self.enemy = arcade.Sprite("./assets/enemy.png")
+        self.enemy.scale = 0.20
+        self.enemy.center_x = screen_width - 100
         self.enemy.center_y = ground_y 
+        self.enemy.change_x -=1
         self.enemy_list.append(self.enemy)
 
         
@@ -57,38 +57,51 @@ class GAME (arcade.Window):
         self.lista_player.draw ()
         if self.enemy:
             self.enemy_list.draw()
-        arcade.draw_text(f"score: {self.score}", 10, screen_height - 30, arcade.color.WHITE, 20)
+        arcade.draw_text(f"score: {int(self.score)}", 10, screen_height - 30, arcade.color.WHITE, 20)
 
     def on_update(self, delta_time):
         #self.camera.position = self.player.position
     
         if self.game_over:
             return
-        #player movements
-
+        
+        self.score += abs(self.player.change_x) * delta_time * 10 # abs = removes the negative numbers
+     
+     #player movements
         if self.move_left:
             self.player.change_x = -player_speed
         elif self.move_right:
             self.player.change_x = player_speed
         else:
             self.player.change_x = 0
-            self.player.change_y = 0
     
         self.player.center_x += self.player.change_x
         self.player.change_y -= gravity
         self.player.center_y += self.player.change_y
 
+    
     #stops player from falling below ground
         if self.player.center_y <= ground_y:
            self.player.center_y = ground_y
            self.player.change_y = 0
            self.on_ground = True
 
+    #creates enemy if it doesn't exist
         if self.enemy is None:
             self.setup_enemy()
+
+    #enemy movements
+        if self.enemy.center_y <= ground_y:
+           self.enemy.center_y = ground_y
+           self.enemy.change_y = 0
+           self.on_ground = True
+           self.enemy.center_x += self.enemy.change_x
+        
+        self.enemy.change_y -=gravity
+
     #if enemy gets out of frame then remove it
-        if self.enemy:
-            if self.enemy.right <0:
+        if self.enemy.right <0:
+                self.enemy_list.remove(self.enemy)
                 self.enemy = None
 
         if arcade.check_for_collision(self.player, self.enemy):
