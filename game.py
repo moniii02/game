@@ -6,7 +6,7 @@ screen_height = 450
 screen_title = "GAME"
 
 gravity = 3 #pulls player down
-jump_speed = 40
+jump_speed = 50
 player_speed = 6
 ground_y = 100 #an imaginary line to stop the player from falling
 
@@ -24,7 +24,6 @@ class GAME (arcade.Window):
         self.enemy_list = arcade.SpriteList()
         self.game_over = False
         arcade.set_background_color(arcade.color.SKY_BLUE)
-        #self.camera = arcade.camera.Camera2D()
 
         self.setup()
         
@@ -45,23 +44,27 @@ class GAME (arcade.Window):
     def setup_enemy(self):
         self.enemy = arcade.Sprite("./assets/enemy.png")
         self.enemy.scale = 0.20
-        self.enemy.center_x = screen_width - 100
+        self.enemy.center_x = screen_width + 50
         self.enemy.center_y = ground_y 
-        self.enemy.change_x -=1
+        self.enemy.change_x = -4
+        self.enemy.change_y = 0
         self.enemy_list.append(self.enemy)
 
         
     def on_draw(self):
         self.clear()
-        #self.camera.use()
         self.lista_player.draw ()
         if self.enemy:
             self.enemy_list.draw()
+        
         arcade.draw_text(f"score: {int(self.score)}", 10, screen_height - 30, arcade.color.WHITE, 20)
 
+        if self.game_over:
+            arcade.draw_text("GAME OVER", screen_width // 2 - 135, screen_height // 2, arcade.color.DARK_RED, 40)
+            
+
+
     def on_update(self, delta_time):
-        #self.camera.position = self.player.position
-    
         if self.game_over:
             return
         
@@ -75,12 +78,10 @@ class GAME (arcade.Window):
         else:
             self.player.change_x = 0
     
-        self.player.center_x += self.player.change_x
+        self.player.center_x += self.player.change_
         self.player.change_y -= gravity
         self.player.center_y += self.player.change_y
         
-
-    
     #stops player from falling below ground
         if self.player.center_y <= ground_y:
            self.player.center_y = ground_y
@@ -91,34 +92,15 @@ class GAME (arcade.Window):
         if self.enemy is None:
             self.setup_enemy()
 
-    #enemy movements
-        if self.enemy.center_y <= ground_y:
-           self.enemy.center_y = ground_y
-           self.enemy.change_y = 0
-           self.on_ground = True
-           self.enemy.center_x += self.enemy.change_x
-        
-        self.enemy.change_y -=gravity
+        if self.enemy:
+            self.enemy.center_x += self.enemy.change_x
 
     #if enemy gets out of frame then remove it
         if self.enemy.right <0:
                 self.enemy_list.remove(self.enemy)
                 self.enemy = None
-
-    #enemy movements
-        if self.enemy.center_y <= ground_y:
-           self.enemy.center_y = ground_y
-           self.enemy.change_y = 0
-           self.on_ground = True
-           self.enemy.center_x += self.enemy.change_x
-
-        self.enemy.change_y -= gravity
-        
-        if self.enemy.right < 0:
-            self.enemy_list.remove(self.enemy)
-            self.enemy = None
        
-        if arcade.check_for_collision(self.player, self.enemy):
+        if self.enemy and arcade.check_for_collision(self.player, self.enemy):
             self.game_over = True 
             print("GAME OVER")
 
@@ -127,7 +109,7 @@ class GAME (arcade.Window):
             self.move_left = True
         elif key == arcade.key.D:
             self.move_right = True
-        elif key == arcade.key.SPACE and self.on_ground:
+        elif key == arcade.key.W and self.on_ground:
             self.player.change_y = jump_speed
             self.on_ground = False
 
