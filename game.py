@@ -78,7 +78,7 @@ class GAME (arcade.Window):
         else:
             self.player.change_x = 0
     
-        self.player.center_x += self.player.change_
+        self.player.center_x += self.player.change_x
         self.player.change_y -= gravity
         self.player.center_y += self.player.change_y
         
