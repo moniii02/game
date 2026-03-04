@@ -44,10 +44,10 @@ class GAME (arcade.Window):
     
     def setup_enemy(self):
         self.enemy = arcade.Sprite("./assets/enemy.png")
-        self.enemy.scale = 0.10
+        self.enemy.scale = 0.20
         self.enemy.center_x = screen_width - 100
         self.enemy.center_y = ground_y 
-        self.enemy.change_x -= 1
+        self.enemy.change_x -=1
         self.enemy_list.append(self.enemy)
 
         
@@ -57,7 +57,7 @@ class GAME (arcade.Window):
         self.lista_player.draw ()
         if self.enemy:
             self.enemy_list.draw()
-        arcade.draw_text(f"score: {self.score}", 10, screen_height - 30, arcade.color.WHITE, 20)
+        arcade.draw_text(f"score: {int(self.score)}", 10, screen_height - 30, arcade.color.WHITE, 20)
 
     def on_update(self, delta_time):
         #self.camera.position = self.player.position
@@ -65,7 +65,9 @@ class GAME (arcade.Window):
         if self.game_over:
             return
         
-    #player movements
+        self.score += abs(self.player.change_x) * delta_time * 10 # abs = removes the negative numbers
+     
+     #player movements
         if self.move_left:
             self.player.change_x = -player_speed
         elif self.move_right:
@@ -78,15 +80,30 @@ class GAME (arcade.Window):
         self.player.center_y += self.player.change_y
         
 
+    
     #stops player from falling below ground
         if self.player.center_y <= ground_y:
            self.player.center_y = ground_y
            self.player.change_y = 0
            self.on_ground = True
-        
+
     #creates enemy if it doesn't exist
         if self.enemy is None:
             self.setup_enemy()
+
+    #enemy movements
+        if self.enemy.center_y <= ground_y:
+           self.enemy.center_y = ground_y
+           self.enemy.change_y = 0
+           self.on_ground = True
+           self.enemy.center_x += self.enemy.change_x
+        
+        self.enemy.change_y -=gravity
+
+    #if enemy gets out of frame then remove it
+        if self.enemy.right <0:
+                self.enemy_list.remove(self.enemy)
+                self.enemy = None
 
     #enemy movements
         if self.enemy.center_y <= ground_y:
