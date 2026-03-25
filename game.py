@@ -110,7 +110,7 @@ class GAME (arcade.Window):
     def on_update(self, delta_time):
         if self.game_over:
             return
-
+        
     #score increases over time 
         self.score += delta_time * 10
 
@@ -152,7 +152,7 @@ class GAME (arcade.Window):
             if arcade.check_for_collision(self.player, enemy):
                 self.game_over = True
 
-            self.center_camera_to_player()
+        self.center_camera_to_player()
 
 
     def on_key_press(self,key, modifiers):
