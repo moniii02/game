@@ -44,6 +44,10 @@ class GAME (arcade.Window):
         #Platform generation
         self.last_platform_x = 200
 
+        #coins
+        
+        self.coin_list = arcade.SpriteList()
+
         self.setup()
         
 
@@ -57,16 +61,23 @@ class GAME (arcade.Window):
         self.player_list.append(self.player)
 
         #ground
-        ground = arcade.SpriteSolidColor(5000, 40, arcade.color.DARK_GREEN)
+        ground = arcade.SpriteSolidColor(60000, 40)
         ground.center_x = 2500
         ground.center_y = 20
         self.wall_list.append(ground)
+
+        #first platfrom manually
+        platform = arcade.SpriteSolidColor(130, 20, arcade.color.BROWN)
+        platform.center_x = 115
+        platform.center_y = 150
+
+        self.wall_list.append(platform)
 
         #initial platforms
         for _ in range (10):
             self.spawn_platform()
 
-        #physics engine
+        #player on platform
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, self.wall_list, gravity_constant=gravity)
 
     def spawn_platform(self):
@@ -80,6 +91,13 @@ class GAME (arcade.Window):
 
         self.wall_list.append(platform)
         self.last_platform_x = x
+
+        #coins
+        coin = arcade.Sprite("./assets/coin.png", scale= 0.15)
+        coin.center_x = x
+        coin.bottom = y + 25
+
+        self.coin_list.append(coin)
 
     def setup_enemy(self):
         enemy = arcade.Sprite("./assets/enemy.png")
@@ -100,6 +118,7 @@ class GAME (arcade.Window):
             self.wall_list.draw()
             self.player_list.draw ()
             self.enemy_list.draw()
+            self.coin_list.draw()
         
         arcade.draw_text(f"score: {int(self.score)}", 10, screen_height - 30, arcade.color.WHITE, 20)
 
@@ -111,8 +130,12 @@ class GAME (arcade.Window):
         if self.game_over:
             return
         
+        # if self.player.top <= 0:
+        #     self.game_over = True
+        
+        
     #score increases over time 
-        self.score += delta_time * 10
+        self.score = self.player.center_x / 30
 
      #player movements
         if self.move_left:
