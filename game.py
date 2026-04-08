@@ -1,5 +1,6 @@
 import arcade
 import random
+from sprite_animato import SpriteAnimato
 
 screen_width = 900
 screen_height = 450
@@ -9,6 +10,71 @@ gravity = 1
 jump_speed = 18
 player_speed = 6
 
+class Player(SpriteAnimato):
+    def __init__(self):
+        super().__init__(scala = 2.0)
+        file_animazione = {
+            "destra": "./assets/run_player.png",
+            "sinistra": "./assets/run_player.png"
+        }
+
+        for dir, percorso in file_animazione.items():
+            self.aggiungi_animazione(
+                nome = f"run_{dir}",
+                percorso = percorso,
+                frame_width = 48,
+                frame_height = 64,
+                num_frame = 8,
+                colonne = 8,
+                durata = 1,
+                riga = 0
+            )
+
+        self.direzione = "destra"
+
+
+    def update_animation(self, delta_time):
+        if self.change_x > 0:
+            self.direzione = "destra"
+        elif self.change_x < 0:
+            self.direzione = "sinistra"
+
+        self.imposta_animazione(f"run_{self.direzione}")
+
+        super().update_animation(delta_time)
+        
+class Enemy(SpriteAnimato):
+    def __init__(self):
+        super().__init__(scala = 2.0)
+        file_animazione = {
+            "destra": "./assets/run_slime.png",
+            "sinistra": "./assets/run_slime.png"
+        }
+
+        for dir, percorso in file_animazione.items():
+            self.aggiungi_animazione(
+                nome = f"run_{dir}",
+                percorso = percorso,
+                frame_width = 31.5,
+                frame_height = 25,
+                num_frame = 8,
+                colonne = 8,
+                durata = 1,
+                riga = 0
+            )
+
+        self.direzione = "destra"
+
+
+    def update_animation(self, delta_time):
+        if self.change_x > 0:
+            self.direzione = "destra"
+        elif self.change_x < 0:
+            self.change_y = "sinistra"
+
+        self.imposta_animazione(f"run_{self.direzione}")
+
+        super().update_animation(delta_time)
 
 class GAME (arcade.Window):
     def __init__(self, width, height, title):
@@ -45,7 +111,6 @@ class GAME (arcade.Window):
         self.last_platform_x = 200
 
         #coins
-        
         self.coin_list = arcade.SpriteList()
 
         self.setup()
@@ -53,24 +118,25 @@ class GAME (arcade.Window):
 
     def setup(self):
         #player
-        self.player = arcade.Sprite("./assets/player.png")
+        self.player = Player()
         self.player.center_x = 75
         self.player.center_y = 150
 
-        self.player.scale = 0.3
+        # self.player.scale = 0.3
         self.player_list.append(self.player)
 
         #ground
         ground = arcade.SpriteSolidColor(60000, 40)
         ground.center_x = 2500
         ground.center_y = 20
+        ground.color = arcade.color.DARK_GREEN
         self.wall_list.append(ground)
 
         #first platfrom manually
         platform = arcade.SpriteSolidColor(130, 20, arcade.color.BROWN)
         platform.center_x = 115
         platform.center_y = 150
-
+        platform.color = arcade.color.BROWN
         self.wall_list.append(platform)
 
         #initial platforms
@@ -88,20 +154,18 @@ class GAME (arcade.Window):
         platform = arcade.SpriteSolidColor(width, 20, arcade.color.BROWN)
         platform.center_x = x
         platform.center_y = y
-
-        self.wall_list.append(platform)
         self.last_platform_x = x
+        platform.color = arcade.color.BROWN
+        self.wall_list.append(platform)
 
         #coins
         coin = arcade.Sprite("./assets/coin.png", scale= 0.15)
         coin.center_x = x
         coin.bottom = y + 25
-
         self.coin_list.append(coin)
 
     def setup_enemy(self):
-        enemy = arcade.Sprite("./assets/enemy.png")
-        enemy.scale = 0.2
+        enemy = Enemy()
         enemy.center_x = self.player.center_x + screen_width
         enemy.center_y = 60
         enemy.change_x = -2
@@ -133,8 +197,10 @@ class GAME (arcade.Window):
         # if self.player.top <= 0:
         #     self.game_over = True
         
+        self.enemy_list.update_animation()
+        self.player_list.update_animation()
         
-    #score increases over time 
+        #score increases over time 
         self.score = self.player.center_x / 30
 
      #player movements
@@ -157,13 +223,13 @@ class GAME (arcade.Window):
                 if platform.right < self.player.center_x - screen_width:
                     platform.remove_from_sprite_lists()
 
-    #spawns enemies every 2 seconds
+        #spawns enemies every 2 seconds
         self.spawn_timer += delta_time
         if self.spawn_timer > 3.5 and  len(self.enemy_list) < 2:
             self.setup_enemy()
             self.spawn_timer = 0
         
-    #update enemies
+        #update enemies
         for enemy in self.enemy_list:
             enemy.center_x += enemy.change_x
 
@@ -174,6 +240,12 @@ class GAME (arcade.Window):
             #collision
             if arcade.check_for_collision(self.player, enemy):
                 self.game_over = True
+
+        #Coin collection
+        coins_hit = arcade.check_for_collision_with_list(self.player, self.coin_list)
+        for coin in coins_hit:
+            coin.remove_from_sprite_lists()
+            self.score += 20
 
         self.center_camera_to_player()
 
