@@ -65,12 +65,15 @@ class Enemy(SpriteAnimato):
 
         self.direzione = "destra"
 
+        self.boundary_left = None
+        self.boundary_right = None
+
 
     def update_animation(self, delta_time):
         if self.change_x > 0:
             self.direzione = "destra"
         elif self.change_x < 0:
-            self.change_y = "sinistra"
+            self.direzione = "sinistra"
 
         self.imposta_animazione(f"run_{self.direzione}")
 
@@ -166,8 +169,11 @@ class GAME (arcade.Window):
 
     def setup_enemy(self):
         enemy = Enemy()
-        enemy.center_x = self.player.center_x + screen_width
-        enemy.center_y = 60
+        platform = random.choice(self.wall_list)
+        enemy.center_x = platform.center_x 
+        enemy.bottom = platform.top
+        enemy.boundary_left = platform.left
+        enemy.boundary_right = platform.right
         enemy.change_x = -2
         self.enemy_list.append(enemy)
 
@@ -231,8 +237,10 @@ class GAME (arcade.Window):
         
         #update enemies
         for enemy in self.enemy_list:
+            if enemy.left < enemy.boundary_left or enemy.right > enemy.boundary_right:
+                enemy.change_x *= -1
             enemy.center_x += enemy.change_x
-
+           
             #remove off-screen enemies
             if enemy.right < 0:
                 enemy.remove_from_sprite_lists()
