@@ -45,7 +45,7 @@ class Player(SpriteAnimato):
         
 class Enemy(SpriteAnimato):
     def __init__(self):
-        super().__init__(scala = 2.0)
+        super().__init__(scala = 1.5)
         file_animazione = {
             "destra": "./assets/run_slime.png",
             "sinistra": "./assets/run_slime.png"
@@ -114,6 +114,7 @@ class GAME (arcade.Window):
         self.last_platform_x = 200
 
         #coins
+        self.coin_score = 0
         self.coin_list = arcade.SpriteList()
 
         self.setup()
@@ -123,9 +124,7 @@ class GAME (arcade.Window):
         #player
         self.player = Player()
         self.player.center_x = 75
-        self.player.center_y = 150
-
-        # self.player.scale = 0.3
+        self.player.center_y = 150  
         self.player_list.append(self.player)
 
         #ground
@@ -136,9 +135,9 @@ class GAME (arcade.Window):
         self.wall_list.append(ground)
 
         #first platfrom manually
-        platform = arcade.SpriteSolidColor(130, 20, arcade.color.BROWN)
+        platform = arcade.SpriteSolidColor(135, 20, arcade.color.BROWN)
         platform.center_x = 115
-        platform.center_y = 150
+        platform.center_y = 155
         platform.color = arcade.color.BROWN
         self.wall_list.append(platform)
 
@@ -162,10 +161,11 @@ class GAME (arcade.Window):
         self.wall_list.append(platform)
 
         #coins
-        coin = arcade.Sprite("./assets/coin.png", scale= 0.15)
-        coin.center_x = x
-        coin.bottom = y + 25
-        self.coin_list.append(coin)
+        if random.random() < 0.5:
+            coin = arcade.Sprite("./assets/coin.png", scale= 0.15)
+            coin.center_x = x + random.randint(-60, 60)
+            coin.bottom = y + random.randint(40, 120)
+            self.coin_list.append(coin)
 
     def setup_enemy(self):
         enemy = Enemy()
@@ -200,14 +200,11 @@ class GAME (arcade.Window):
         if self.game_over:
             return
         
-        # if self.player.top <= 0:
-        #     self.game_over = True
-        
         self.enemy_list.update_animation()
         self.player_list.update_animation()
         
         #score increases over time 
-        self.score = self.player.center_x / 30
+        self.score = self.player.center_x / 30 + self.coin_score
 
      #player movements
         if self.move_left:
@@ -225,22 +222,24 @@ class GAME (arcade.Window):
 
         #remove old paltform
         for platform in self.wall_list:
-            if platform.width < 4000:
-                if platform.right < self.player.center_x - screen_width:
-                    platform.remove_from_sprite_lists()
+            if platform.right < self.player.center_x - screen_width:
+                platform.remove_from_sprite_lists()
 
-        #spawns enemies every 2 seconds
+        #spawn enemies 
         self.spawn_timer += delta_time
-        if self.spawn_timer > 3.5 and  len(self.enemy_list) < 2:
+        if self.spawn_timer > 3 and  len(self.enemy_list) < 3:
             self.setup_enemy()
             self.spawn_timer = 0
         
         #update enemies
         for enemy in self.enemy_list:
-            if enemy.left < enemy.boundary_left or enemy.right > enemy.boundary_right:
+            if enemy.left < enemy.boundary_left:
+                enemy.left = enemy.boundary_left
                 enemy.change_x *= -1
-            enemy.center_x += enemy.change_x
-           
+            elif enemy.right > enemy.boundary_right:
+                enemy.right = enemy.boundary_right
+                enemy.change_x *= -1
+
             #remove off-screen enemies
             if enemy.right < 0:
                 enemy.remove_from_sprite_lists()
@@ -253,7 +252,7 @@ class GAME (arcade.Window):
         coins_hit = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coins_hit:
             coin.remove_from_sprite_lists()
-            self.score += 20
+            self.coin_score += 20
 
         self.center_camera_to_player()
 
@@ -279,4 +278,4 @@ def main():
     arcade.run()
 
 if __name__ == "__main__":
-    main()
+    main()  
